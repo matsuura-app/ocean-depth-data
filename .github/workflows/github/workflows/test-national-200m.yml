@@ -1,0 +1,53 @@
+name: Test National 200m Depth
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download nationwide 200m depth
+        env:
+          MSIL_API_KEY: ${{ secrets.MSIL_API_KEY }}
+        run: |
+          curl -fL \
+            -H "Ocp-Apim-Subscription-Key: ${MSIL_API_KEY}" \
+            "https://api.msil.go.jp/depth-contour/v2/MapServer/14/query?f=geojson&where=1%3D1&returnGeometry=true&outFields=*" \
+            -o national-200m-test.json
+
+      - name: Inspect downloaded data
+        run: |
+          ls -lh national-200m-test.json
+
+          python3 - <<'PY'
+          import json
+
+          with open("national-200m-test.json") as f:
+              d = json.load(f)
+
+          features = d.get("features", [])
+
+          print("================================")
+          print("features:", len(features))
+          print("exceededTransferLimit:", d.get("exceededTransferLimit"))
+          print("================================")
+
+          if features:
+              f = features[0]
+
+              print("first properties:")
+              print(f.get("properties"))
+
+              print("first coordinate:")
+              coords = f.get("geometry", {}).get("coordinates", [])
+
+              if coords:
+                  print(coords[0])
+              else:
+                  print("座標なし")
+          PY
