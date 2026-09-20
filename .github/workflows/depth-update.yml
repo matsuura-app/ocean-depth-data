@@ -11,57 +11,145 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download depth contours
-        env:
-          MSIL_API_KEY: ${{ secrets.MSIL_API_KEY }}
+      - name: Prepare directories
         run: |
-
           mkdir -p depth/20m
           mkdir -p depth/50m
           mkdir -p depth/100m
           mkdir -p depth/150m
           mkdir -p depth/200m
 
-          curl -L \
+      # =========================
+      # 20m
+      # =========================
+      - name: Download 20m depth contour
+        env:
+          MSIL_API_KEY: ${{ secrets.MSIL_API_KEY }}
+        run: |
+
+          curl -fL \
             -H "Ocp-Apim-Subscription-Key: ${MSIL_API_KEY}" \
-            "https://api.msil.go.jp/depth-contour/v2/MapServer/10/query?f=geojson&where=1%3D1&geometry=132.50%2C34.20%2C132.60%2C34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
+            "https://api.msil.go.jp/depth-contour/v2/MapServer/10/query?f=geojson&where=1%3D1&geometry=132.50,34.20,132.60,34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
             -o depth/20m/kure.json
 
-          curl -L \
+      # =========================
+      # 50m
+      # =========================
+      - name: Download 50m depth contour
+        env:
+          MSIL_API_KEY: ${{ secrets.MSIL_API_KEY }}
+        run: |
+
+          curl -fL \
             -H "Ocp-Apim-Subscription-Key: ${MSIL_API_KEY}" \
-            "https://api.msil.go.jp/depth-contour/v2/MapServer/11/query?f=geojson&where=1%3D1&geometry=132.50%2C34.20%2C132.60%2C34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
+            "https://api.msil.go.jp/depth-contour/v2/MapServer/11/query?f=geojson&where=1%3D1&geometry=132.50,34.20,132.60,34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
             -o depth/50m/kure.json
 
-          curl -L \
+      # =========================
+      # 100m
+      # =========================
+      - name: Download 100m depth contour
+        env:
+          MSIL_API_KEY: ${{ secrets.MSIL_API_KEY }}
+        run: |
+
+          curl -fL \
             -H "Ocp-Apim-Subscription-Key: ${MSIL_API_KEY}" \
-            "https://api.msil.go.jp/depth-contour/v2/MapServer/12/query?f=geojson&where=1%3D1&geometry=132.50%2C34.20%2C132.60%2C34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
+            "https://api.msil.go.jp/depth-contour/v2/MapServer/12/query?f=geojson&where=1%3D1&geometry=132.50,34.20,132.60,34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
             -o depth/100m/kure.json
 
-          curl -L \
+      # =========================
+      # 150m
+      # =========================
+      - name: Download 150m depth contour
+        env:
+          MSIL_API_KEY: ${{ secrets.MSIL_API_KEY }}
+        run: |
+
+          curl -fL \
             -H "Ocp-Apim-Subscription-Key: ${MSIL_API_KEY}" \
-            "https://api.msil.go.jp/depth-contour/v2/MapServer/13/query?f=geojson&where=1%3D1&geometry=132.50%2C34.20%2C132.60%2C34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
+            "https://api.msil.go.jp/depth-contour/v2/MapServer/13/query?f=geojson&where=1%3D1&geometry=132.50,34.20,132.60,34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
             -o depth/150m/kure.json
 
-          curl -L \
+      # =========================
+      # 200m
+      # =========================
+      - name: Download 200m depth contour
+        env:
+          MSIL_API_KEY: ${{ secrets.MSIL_API_KEY }}
+        run: |
+
+          curl -fL \
             -H "Ocp-Apim-Subscription-Key: ${MSIL_API_KEY}" \
-            "https://api.msil.go.jp/depth-contour/v2/MapServer/14/query?f=geojson&where=1%3D1&geometry=132.50%2C34.20%2C132.60%2C34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
+            "https://api.msil.go.jp/depth-contour/v2/MapServer/14/query?f=geojson&where=1%3D1&geometry=132.50,34.20,132.60,34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
             -o depth/200m/kure.json
 
-      - name: Check file sizes
+      # =========================
+      # Check data
+      # =========================
+      - name: Check downloaded data
         run: |
-          echo "=== Depth data sizes ==="
+
+          echo "=============================="
+          echo "File sizes"
+          echo "=============================="
+
           du -h depth/*/kure.json
 
+          echo ""
+          echo "=============================="
+          echo "Feature counts"
+          echo "=============================="
+
+          python3 - <<'PY'
+          import json
+          import glob
+
+          for path in sorted(glob.glob("depth/*/kure.json")):
+
+              with open(path, encoding="utf-8") as f:
+                  data = json.load(f)
+
+              features = data.get("features", [])
+
+              print(
+                  path,
+                  "features:",
+                  len(features)
+              )
+
+              if features:
+                  coords = []
+
+                  for feature in features:
+                      geometry = feature.get("geometry")
+
+                      if geometry and geometry.get("coordinates"):
+                          coords.extend(geometry["coordinates"])
+
+                  print(
+                      "  first coordinate:",
+                      features[0]["geometry"]["coordinates"][0]
+                  )
+
+          PY
+
+      # =========================
+      # Commit
+      # =========================
       - name: Commit data
         run: |
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add depth/
 
-          git diff --cached --quiet || git commit -m "Update Kure depth contour data"
+          git diff --cached --quiet || \
+            git commit -m "Update Kure depth contour data"
 
           git push
