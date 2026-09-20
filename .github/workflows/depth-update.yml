@@ -14,29 +14,54 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download 20m depth contour
+      - name: Download depth contours
         env:
           MSIL_API_KEY: ${{ secrets.MSIL_API_KEY }}
         run: |
 
           mkdir -p depth/20m
+          mkdir -p depth/50m
+          mkdir -p depth/100m
+          mkdir -p depth/150m
+          mkdir -p depth/200m
 
           curl -L \
             -H "Ocp-Apim-Subscription-Key: ${MSIL_API_KEY}" \
             "https://api.msil.go.jp/depth-contour/v2/MapServer/10/query?f=geojson&where=1%3D1&geometry=132.50%2C34.20%2C132.60%2C34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
             -o depth/20m/kure.json
 
-      - name: Check file
+          curl -L \
+            -H "Ocp-Apim-Subscription-Key: ${MSIL_API_KEY}" \
+            "https://api.msil.go.jp/depth-contour/v2/MapServer/11/query?f=geojson&where=1%3D1&geometry=132.50%2C34.20%2C132.60%2C34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
+            -o depth/50m/kure.json
+
+          curl -L \
+            -H "Ocp-Apim-Subscription-Key: ${MSIL_API_KEY}" \
+            "https://api.msil.go.jp/depth-contour/v2/MapServer/12/query?f=geojson&where=1%3D1&geometry=132.50%2C34.20%2C132.60%2C34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
+            -o depth/100m/kure.json
+
+          curl -L \
+            -H "Ocp-Apim-Subscription-Key: ${MSIL_API_KEY}" \
+            "https://api.msil.go.jp/depth-contour/v2/MapServer/13/query?f=geojson&where=1%3D1&geometry=132.50%2C34.20%2C132.60%2C34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
+            -o depth/150m/kure.json
+
+          curl -L \
+            -H "Ocp-Apim-Subscription-Key: ${MSIL_API_KEY}" \
+            "https://api.msil.go.jp/depth-contour/v2/MapServer/14/query?f=geojson&where=1%3D1&geometry=132.50%2C34.20%2C132.60%2C34.30&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&returnGeometry=true" \
+            -o depth/200m/kure.json
+
+      - name: Check file sizes
         run: |
-          ls -lh depth/20m/kure.json
+          echo "=== Depth data sizes ==="
+          du -h depth/*/kure.json
 
       - name: Commit data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add depth/20m/kure.json
+          git add depth/
 
-          git diff --cached --quiet || git commit -m "Update Kure 20m depth data"
+          git diff --cached --quiet || git commit -m "Update Kure depth contour data"
 
           git push
